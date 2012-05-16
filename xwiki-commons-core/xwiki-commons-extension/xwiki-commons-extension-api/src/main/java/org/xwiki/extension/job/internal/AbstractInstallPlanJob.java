@@ -38,7 +38,7 @@ import org.xwiki.extension.ExtensionId;
 import org.xwiki.extension.InstallException;
 import org.xwiki.extension.InstalledExtension;
 import org.xwiki.extension.ResolveException;
-import org.xwiki.extension.job.ExtensionRequest;
+import org.xwiki.extension.job.InstallRequest;
 import org.xwiki.extension.job.plan.ExtensionPlanAction.Action;
 import org.xwiki.extension.job.plan.ExtensionPlanNode;
 import org.xwiki.extension.job.plan.ExtensionPlanTree;
@@ -60,7 +60,7 @@ import org.xwiki.extension.version.VersionConstraint;
  * @version $Id$
  * @since 4.1M1
  */
-public abstract class AbstractInstallPlanJob<R extends ExtensionRequest> extends AbstractExtensionJob<R>
+public abstract class AbstractInstallPlanJob<R extends InstallRequest> extends AbstractExtensionJob<R>
 {
     protected static class ModifableExtensionPlanTree extends ArrayList<ModifableExtensionPlanNode> implements
         Cloneable
@@ -365,22 +365,26 @@ public abstract class AbstractInstallPlanJob<R extends ExtensionRequest> extends
             this.logger.info("Found already installed extension with id [{}]. Checking compatibility.", extensionId);
 
             if (extensionId.getVersion() == null) {
-                throw new InstallException(MessageFormat.format("The extension with id [{0}] is already installed",
-                    extensionId.getId()));
-            }
-
-            int diff = extensionId.getVersion().compareTo(installedExtension.getId().getVersion());
-
-            if (diff == 0) {
-                throw new InstallException(
-                    MessageFormat.format("The extension [{0}] is already installed", extensionId));
-            } else if (diff < 0) {
-                throw new InstallException(MessageFormat.format("A more recent version of [{0}] is already installed",
-                    extensionId.getId()));
+                if (!getRequest().isReinstall()) {
+                    throw new InstallException(MessageFormat.format("The extension with id [{0}] is already installed",
+                        extensionId.getId()));
+                }
             } else {
-                // upgrade
-                previousExtension = installedExtension;
+                int diff = extensionId.getVersion().compareTo(installedExtension.getId().getVersion());
+
+                if (diff == 0) {
+                    if (!getRequest().isReinstall()) {
+                        throw new InstallException(MessageFormat.format("The extension [{0}] is already installed",
+                            extensionId));
+                    }
+                } else if (diff < 0) {
+                    throw new InstallException(MessageFormat.format(
+                        "A more recent version of [{0}] is already installed", extensionId.getId()));
+                }
             }
+
+            // upgrade
+            previousExtension = installedExtension;
         }
 
         ModifableExtensionPlanNode node = installExtension(previousExtension, extensionId, dependency, namespace);
@@ -667,7 +671,7 @@ public abstract class AbstractInstallPlanJob<R extends ExtensionRequest> extends
 
         try {
             // Check is the extension is already in local repository
-            Extension extension = resolveExtension(extensionId);
+            Extension extension = resolveExtension(extensionId, dependency);
 
             notifyStepPropress();
 
@@ -686,20 +690,25 @@ public abstract class AbstractInstallPlanJob<R extends ExtensionRequest> extends
      * @return the extension
      * @throws InstallException error when trying to resolve extension
      */
-    private Extension resolveExtension(ExtensionId extensionId) throws InstallException
+    private Extension resolveExtension(ExtensionId extensionId, boolean dependency) throws InstallException
     {
-        // Check is the extension is already in local repository
-        Extension extension;
-        try {
-            extension = this.localExtensionRepository.resolve(extensionId);
-        } catch (ResolveException e) {
-            this.logger.debug("Can't find extension in local repository, trying to download it.", e);
+        Extension extension = null;
 
+        if (dependency || !getRequest().isIgnoreLocal()) {
+            // Check is the extension is already in local repository
+            try {
+                extension = this.localExtensionRepository.resolve(extensionId);
+            } catch (ResolveException e) {
+                this.logger.debug("Can't find extension in local repository, trying to download it.", e);
+            }
+        }
+
+        if (extension == null) {
             // Resolve extension
             try {
                 extension = this.repositoryManager.resolve(extensionId);
-            } catch (ResolveException e1) {
-                throw new InstallException(MessageFormat.format("Failed to resolve extension [{0}]", extensionId), e1);
+            } catch (ResolveException e) {
+                throw new InstallException(MessageFormat.format("Failed to resolve extension [{0}]", extensionId), e);
             }
         }
 

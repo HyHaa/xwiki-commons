@@ -23,12 +23,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.reflections.Reflections;
@@ -75,7 +75,7 @@ public class RepositoryUtil
     {
         this.componentManager = componentManager;
 
-        File testDirectory = new File("target/test-" + RandomStringUtils.randomAlphabetic(10));
+        File testDirectory = new File("target/test-" + new Date().getTime());
 
         this.temporaryDirectory = new File(testDirectory, "temporary-dir");
 
@@ -144,9 +144,8 @@ public class RepositoryUtil
         // add default test core extension
 
         registerComponent(ConfigurableDefaultCoreExtensionRepository.class);
-        ((ConfigurableDefaultCoreExtensionRepository) this.componentManager
-            .getInstance(CoreExtensionRepository.class)).addExtensions("coreextension", new DefaultVersion(
-            "version"));
+        ((ConfigurableDefaultCoreExtensionRepository) this.componentManager.getInstance(CoreExtensionRepository.class))
+            .addExtensions("coreextension", new DefaultVersion("version"));
 
         // copy
 
@@ -177,7 +176,7 @@ public class RepositoryUtil
 
         // init
 
-        this.componentManager.<ExtensionInitializer>getInstance(ExtensionInitializer.class).initialize();
+        this.componentManager.<ExtensionInitializer> getInstance(ExtensionInitializer.class).initialize();
     }
 
     public ComponentAnnotationLoader getComponentLoader()

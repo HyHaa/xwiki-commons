@@ -253,9 +253,15 @@ public class DefaultLocalExtensionRepository extends AbstractExtensionRepository
     @Override
     public LocalExtension storeExtension(Extension extension) throws LocalExtensionRepositoryException
     {
+        return storeExtension(extension, false);
+    }
+
+    @Override
+    public LocalExtension storeExtension(Extension extension, boolean force) throws LocalExtensionRepositoryException
+    {
         DefaultLocalExtension localExtension = this.extensions.get(extension.getId());
 
-        if (localExtension == null) {
+        if (localExtension == null || force) {
             try {
                 localExtension = createExtension(extension);
 

@@ -35,16 +35,6 @@ import org.xwiki.job.Request;
 public abstract class AbstractExtensionRequest extends AbstractRequest implements ExtensionRequest
 {
     /**
-     * @see #getExtensions()
-     */
-    public static final String PROPERTY_EXTENSIONS = "extensions";
-
-    /**
-     * @see #getNamespaces()
-     */
-    public static final String PROPERTY_NAMESPACES = "namespaces";
-
-    /**
      * Serialization identifier.
      */
     private static final long serialVersionUID = 1L;
@@ -111,5 +101,11 @@ public abstract class AbstractExtensionRequest extends AbstractRequest implement
         }
 
         namespaces.add(namespace);
+    }
+
+    @Override
+    public boolean isCleanLocal()
+    {
+        return getProperty(PROPERTY_CLEANLOCAL, false);
     }
 }

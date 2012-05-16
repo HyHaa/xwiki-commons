@@ -33,6 +33,24 @@ import org.xwiki.job.Request;
 public interface ExtensionRequest extends Request
 {
     /**
+     * @see #getExtensions()
+     * @since 4.1M2
+     */
+    String PROPERTY_EXTENSIONS = "extensions";
+
+    /**
+     * @see #getNamespaces()
+     * @since 4.1M2
+     */
+    String PROPERTY_NAMESPACES = "namespaces";
+
+    /**
+     * @see #isCleanLocal()
+     * @since 4.1M2
+     */
+    String PROPERTY_CLEANLOCAL = "cleanlocal";
+
+    /**
      * @return the extension on which to apply the task.
      */
     Collection<ExtensionId> getExtensions();
@@ -46,4 +64,9 @@ public interface ExtensionRequest extends Request
      * @return indicate if the request is applied on specific namespace or all of them
      */
     boolean hasNamespaces();
+
+    /**
+     * @return indicate of the local repository should be cleaned when an extension is removed
+     */
+    boolean isCleanLocal();
 }

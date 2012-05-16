@@ -30,6 +30,18 @@ import org.xwiki.job.Request;
 public class InstallRequest extends AbstractExtensionRequest
 {
     /**
+     * @see #isIgnoreLocal()
+     * @since 4.1M2
+     */
+    public static final String PROPERTY_IGNORELOCAL = "ignorelocal";
+
+    /**
+     * @see #isReinstall()
+     * @since 4.1M2
+     */
+    public static final String PROPERTY_REINSTALL = "reinstall";
+
+    /**
      * Serialization identifier.
      */
     private static final long serialVersionUID = 1L;
@@ -48,4 +60,41 @@ public class InstallRequest extends AbstractExtensionRequest
     {
         super(request);
     }
+
+    /**
+     * @param ignoreLocal true if local repository should not be taken into account when resolving the extension
+     * @since 4.1M2
+     */
+    public void setIgnoreLocal(boolean ignoreLocal)
+    {
+        setProperty(PROPERTY_IGNORELOCAL, ignoreLocal);
+    }
+
+    /**
+     * @return true if local repository should not be taken into account when resolving the extension
+     * @since 4.1M2
+     */
+    public boolean isIgnoreLocal()
+    {
+        return getProperty(PROPERTY_IGNORELOCAL, false);
+    }
+
+    /**
+     * @param reinstall true if the listed extension should be resinstalled if already installed
+     * @since 4.1M2
+     */
+    public void setReinstall(boolean reinstall)
+    {
+        setProperty(PROPERTY_IGNORELOCAL, reinstall);
+    }
+
+    /**
+     * @return true if the listed extension should be resinstalled if already installed
+     * @since 4.1M2
+     */
+    public boolean isReinstall()
+    {
+        return getProperty(PROPERTY_IGNORELOCAL, false);
+    }
+
 }

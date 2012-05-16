@@ -69,6 +69,16 @@ public interface LocalExtensionRepository extends ExtensionRepository, Searchabl
     LocalExtension storeExtension(Extension extension) throws LocalExtensionRepositoryException;
 
     /**
+     * Store provided extension (generally a remote extension) in the local repository.
+     * 
+     * @param extension the extension to store
+     * @param force if true overwite any existing local extension file
+     * @return the new local extension
+     * @throws LocalExtensionRepositoryException error when trying store provided extension in the local repository
+     */
+    LocalExtension storeExtension(Extension extension, boolean force) throws LocalExtensionRepositoryException;
+
+    /**
      * @param localExtension the local extension to modify
      * @param properties the properties to set
      * @throws LocalExtensionRepositoryException error when trying to save the extension change

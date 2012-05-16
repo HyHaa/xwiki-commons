@@ -190,7 +190,7 @@ public class InstallJob extends AbstractExtensionJob<InstallRequest>
     private void storeExtension(Extension extension) throws LocalExtensionRepositoryException
     {
         if (!(extension instanceof LocalExtension)) {
-            this.localExtensionRepository.storeExtension(extension);
+            this.localExtensionRepository.storeExtension(extension, getRequest().isIgnoreLocal());
         }
     }
 
