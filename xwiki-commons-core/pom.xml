@@ -119,6 +119,9 @@
             <exclude>org/xwiki/job/event/status/JobStatus</exclude> <!-- New methods -->
             <exclude>org/xwiki/job/AbstractJob</exclude> <!-- Still compatible with extends -->
             <exclude>org/xwiki/extension/job/plan/ExtensionPlan</exclude> <!-- Return an extended type -->
+            <exclude>org/xwiki/extension/job/AbstractExtensionRequest</exclude> <!-- Constants moved an implemented interface -->
+            <exclude>org/xwiki/extension/job/ExtensionRequest</exclude> <!-- New methods -->
+            <exclude>org/xwiki/extension/repository/LocalExtensionRepository</exclude> <!-- New methods -->
           </excludes>
         </configuration>
       </plugin>
