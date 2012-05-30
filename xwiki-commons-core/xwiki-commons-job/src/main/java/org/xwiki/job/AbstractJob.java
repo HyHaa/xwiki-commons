@@ -19,7 +19,6 @@
  */
 package org.xwiki.job;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -148,7 +147,7 @@ public abstract class AbstractJob<R extends Request> implements Job
     {
         this.jobContext.pushCurrentJob(this);
 
-        this.observationManager.notify(new JobStartedEvent(getId(), getType(), request), this);
+        this.observationManager.notify(new JobStartedEvent(getRequest().getId(), getType(), request), this);
 
         this.status.setStartDate(new Date());
         this.status.setState(JobStatus.State.RUNNING);
@@ -173,7 +172,8 @@ public abstract class AbstractJob<R extends Request> implements Job
 
             this.finishedCondition.signalAll();
 
-            this.observationManager.notify(new JobFinishedEvent(getId(), getType(), this.request), this, exception);
+            this.observationManager.notify(new JobFinishedEvent(getRequest().getId(), getType(), this.request), this,
+                exception);
             this.jobContext.popCurrentJob();
 
             try {
@@ -194,6 +194,7 @@ public abstract class AbstractJob<R extends Request> implements Job
      * @param request the request
      * @return the request in the proper extended type
      */
+    @SuppressWarnings("unchecked")
     protected R castRequest(Request request)
     {
         return (R) request;
@@ -205,16 +206,7 @@ public abstract class AbstractJob<R extends Request> implements Job
      */
     protected AbstractJobStatus<R> createNewStatus(R request)
     {
-        return new DefaultJobStatus<R>((R) request, getId(), this.observationManager, this.loggerManager);
-    }
-
-    /**
-     * @return unique id for the job
-     */
-    protected String getId()
-    {
-        return getRequest().getId() != null ? getRequest().getId() : getClass().getName() + "_"
-            + Integer.toHexString(hashCode());
+        return new DefaultJobStatus<R>(request, this.observationManager, this.loggerManager);
     }
 
     /**
