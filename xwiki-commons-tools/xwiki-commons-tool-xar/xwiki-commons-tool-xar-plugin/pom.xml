@@ -27,20 +27,24 @@
   <parent>
     <groupId>org.xwiki.commons</groupId>
     <artifactId>xwiki-commons-tool-xar</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.2-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-commons-tool-xar-plugin</artifactId>
   <name>XWiki Commons - Tools - XAR Tools - XAR Plugin</name>
   <packaging>maven-plugin</packaging>
   <description>XWiki Commons - Tools - XAR Tools - XAR Plugin</description>
   <properties>
-    <mavenVersion>2.0.9</mavenVersion>
-    <pluginTestingVersion>1.2</pluginTestingVersion>
+    <mavenVersion>3.0.4</mavenVersion>
   </properties>
   <dependencies>
     <dependency>
       <groupId>dom4j</groupId>
       <artifactId>dom4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-archiver</artifactId>
+      <version>2.1.1</version>
     </dependency>
     <!-- Required by the Format mojo to write XML files -->
     <dependency>
@@ -60,9 +64,8 @@
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
-      <version>3.0</version>
+      <version>3.0.1</version>
     </dependency>
-    <!-- maven -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
@@ -73,9 +76,10 @@
       <artifactId>maven-plugin-api</artifactId>
       <version>${mavenVersion}</version>
     </dependency>
+    <!-- TODO: Need to find out what ArtifactResolver has been replaced by in Maven 3.x and upddate the plugin code -->
     <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-project</artifactId>
+      <artifactId>maven-compat</artifactId>
       <version>${mavenVersion}</version>
     </dependency>
     <dependency>
@@ -83,58 +87,18 @@
       <artifactId>maven-model</artifactId>
       <version>${mavenVersion}</version>
     </dependency>
-
-    <!-- plexus -->
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-archiver</artifactId>
-      <version>2.0</version>
-    </dependency>
     <!-- Used to get access to the Maven Logger to log on the console -->
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-container-default</artifactId>
-      <version>1.0-alpha-9-stable-1</version>
+      <version>1.5.5</version>
       <exclusions>
         <exclusion>
           <artifactId>junit</artifactId>
           <groupId>junit</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-io</artifactId>
-      <version>2.0.1</version>
-    </dependency>
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit-dep</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.plugin-testing</groupId>
-      <artifactId>maven-plugin-testing-harness</artifactId>
-      <version>${pluginTestingVersion}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>junit</artifactId>
-          <groupId>junit</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.shared</groupId>
-      <artifactId>maven-verifier</artifactId>
-      <version>1.3</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>junit</artifactId>
-          <groupId>junit</groupId>
-        </exclusion>
-      </exclusions>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
   <build>
@@ -143,6 +107,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
+          <!-- This to allow calling mvn xar:<mojo> from the command line. For example mvn xar:format
+               Without this users would need to call mvn xwiki-commons-tool-xar-plugin:format -->
           <goalPrefix>xar</goalPrefix>
         </configuration>
       </plugin>

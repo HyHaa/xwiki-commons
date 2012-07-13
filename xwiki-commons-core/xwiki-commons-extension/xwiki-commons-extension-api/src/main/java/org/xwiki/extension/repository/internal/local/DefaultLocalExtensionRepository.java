@@ -73,29 +73,29 @@ public class DefaultLocalExtensionRepository extends AbstractExtensionRepository
      * Used to get repository path.
      */
     @Inject
-    private ExtensionManagerConfiguration configuration;
+    private transient ExtensionManagerConfiguration configuration;
 
     /**
      * The logger to log.
      */
     @Inject
-    private Logger logger;
+    private transient Logger logger;
 
     /**
      * The component manager.
      */
     @Inject
-    private ComponentManager componentManager;
+    private transient ComponentManager componentManager;
 
     /**
      * Used to manipulate filesystem repository storage.
      */
-    private ExtensionStorage storage;
+    private transient ExtensionStorage storage;
 
     /**
      * The local extensions.
      */
-    private Map<ExtensionId, DefaultLocalExtension> extensions =
+    private transient Map<ExtensionId, DefaultLocalExtension> extensions =
         new ConcurrentHashMap<ExtensionId, DefaultLocalExtension>();
 
     /**
@@ -317,6 +317,15 @@ public class DefaultLocalExtensionRepository extends AbstractExtensionRepository
             // Should not happen if the local extension exists
 
             this.logger.error("Failed to remove extension [" + extension + "]", e);
+        }
+
+        // Remove the extension from the memory.
+        this.extensions.remove(localExtension.getId());
+        List<DefaultLocalExtension> localExtensionVersions =
+            this.extensionsVersions.get(localExtension.getId().getId());
+        localExtensionVersions.remove(localExtension);
+        if (localExtensionVersions.isEmpty()) {
+            this.extensionsVersions.remove(localExtension.getId().getId());
         }
     }
 

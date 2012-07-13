@@ -108,7 +108,7 @@ public class UpgradePlanJob extends AbstractInstallPlanJob<InstallRequest>
                     }
                 }
             } catch (ResolveException e) {
-                this.logger.warn("Failed to resolve versions for extension id [{}]", extensionId, e);
+                this.logger.debug("Failed to resolve versions for extension id [{}]", extensionId, e);
             }
         }
     }
@@ -127,11 +127,11 @@ public class UpgradePlanJob extends AbstractInstallPlanJob<InstallRequest>
         try {
             installExtension(extensionId, namespace, currentTree);
 
-            this.extensionTree = currentTree;
+            setExtensionTree(currentTree);
 
             return true;
         } catch (InstallException e) {
-            this.logger.warn("Can't install extension [{}] on namespace [{}].",
+            this.logger.debug("Can't install extension [{}] on namespace [{}].",
                 new Object[] {extensionId, namespace, e});
         }
 
@@ -165,9 +165,5 @@ public class UpgradePlanJob extends AbstractInstallPlanJob<InstallRequest>
                 }
             }
         }
-
-        // Create the final tree
-
-        this.finalExtensionTree.addAll(createFinalTree(this.extensionTree));
     }
 }

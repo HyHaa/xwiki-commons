@@ -32,21 +32,25 @@ import java.util.Set;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.ComponentAnnotationLoader;
+import org.xwiki.component.annotation.ComponentDeclaration;
 import org.xwiki.component.annotation.ComponentDescriptorFactory;
 import org.xwiki.component.descriptor.ComponentDependency;
 import org.xwiki.component.descriptor.ComponentDescriptor;
 import org.xwiki.component.descriptor.DefaultComponentDescriptor;
-import org.xwiki.component.embed.EmbeddableComponentManager;
 import org.xwiki.component.util.ReflectionUtils;
+import org.xwiki.test.annotation.AllComponents;
+import org.xwiki.test.annotation.ComponentList;
 import org.xwiki.test.annotation.MockingRequirement;
 
 /**
  * Unit tests for Components should extend this class instead of the older
  * {@link org.xwiki.test.AbstractComponentTestCase} test class. To use this class, add a private field of the type of
  * the component class being tested and annotate it with {@link org.xwiki.test.annotation.MockingRequirement}. This test
- * case will then find all Requirements of the component class being tested and inject mocks for each of them. To set
+ * case will then find all Requirements of the component class being tested and register mocks for each of them. To set
  * expectations simply look them up in setUp() (for example) and define their expectations in your test methods or
- * setUp(). For example: <code><pre>
+ * setUp().
+ *
+ * For example: <code><pre>
  * public class MyComponentTest
  * {
  *     &#64;MockingRequirement
@@ -63,15 +67,28 @@ import org.xwiki.test.annotation.MockingRequirement;
  *     }
  *     ...
  * }
- * </code></pre> Note that if your component under test is using other components in its {@code initialize()} method
+ * </code></pre>
+ *
+ * <p/>
+ * Note that if your component under test is using other components in its {@code initialize()} method
  * you'll need to override the {@link #configure} method to add Mock expectations there.
- * 
+ * </p>
+ * Also note that by default there are no component registered against the component manager except those mocked
+ * automatically by the {@code @MockingRequirement} annotation. This has 2 advantages:
+ * <ul>
+ *   <li>This is the spirit of AbstractMockingComponentTestCase since they're supposed to mock all dependencies and
+ *       define their behaviors</li>
+ *   <li>It makes the tests up to 10 times faster</li>
+ * </ul>
+ * If you really need to register some components, use the {@link ComponentList} annotation and if you really really
+ * need to register all components (it takes time) then use {@link AllComponents}.
+ *
  * @version $Id$
  * @since 2.2M1
  */
 public abstract class AbstractMockingComponentTestCase extends AbstractMockingTestCase
 {
-    private EmbeddableComponentManager componentManager;
+    private MockingComponentManager componentManager;
 
     private ComponentAnnotationLoader loader = new ComponentAnnotationLoader();
 
@@ -83,7 +100,7 @@ public abstract class AbstractMockingComponentTestCase extends AbstractMockingTe
      * Extend EmbeddableComponentManager in order to mock Loggers since they're handled specially and are not
      * components.
      */
-    private class MockingEmbeddableComponentManager extends EmbeddableComponentManager
+    private class LogSpecificMockingComponentManager extends MockingComponentManager
     {
         private List<Class< ? >> mockedComponentClasses = new ArrayList<Class< ? >>();
 
@@ -133,11 +150,10 @@ public abstract class AbstractMockingComponentTestCase extends AbstractMockingTe
     @Before
     public void setUp() throws Exception
     {
-        this.componentManager = new MockingEmbeddableComponentManager();
+        this.componentManager = new LogSpecificMockingComponentManager();
 
-        // Step 1: Register all components available
-        // TODO: Remove this so that tests are executed faster. Need to offer a way to register components manually.
-        this.loader.initialize(this.componentManager, getClass().getClassLoader());
+        // Step 1: Register the components that are needed by the tests.
+        registerComponents();
 
         List<Object[]> components = new ArrayList<Object[]>();
 
@@ -149,9 +165,9 @@ public abstract class AbstractMockingComponentTestCase extends AbstractMockingTe
                 List<Class< ? >> exclusions = Arrays.asList(mockingRequirement.exceptions());
 
                 // Mark the component class having its deps mocked so that our MockingEmbeddableComponentManager will
-                // server a mock Logger (but only if the Logger class is not in the exclusion list)
+                // serve a mock Logger (but only if the Logger class is not in the exclusion list)
                 if (!exclusions.contains(Logger.class)) {
-                    ((MockingEmbeddableComponentManager) this.componentManager)
+                    ((LogSpecificMockingComponentManager) this.componentManager)
                         .addMockedComponentClass(field.getType());
                 }
 
@@ -185,6 +201,30 @@ public abstract class AbstractMockingComponentTestCase extends AbstractMockingTe
 
             ReflectionUtils.setFieldValue(this, field.getName(),
                 getComponentManager().getInstance(descriptor.getRoleType(), descriptor.getRoleHint()));
+        }
+    }
+
+    /**
+     * If the user has specified the {@link org.xwiki.test.annotation.AllComponents} annotation then all components
+     * are lodaded; however this is not recommended since it slows down the execution time; we recommend instead to
+     * use the {@link ComponentList} annotation which only registers the component implementation you pass to it; or
+     * even better don't use any annotation which means no component is registered explicitely which should be the
+     * default since you're mocking all component dependencies with the {@link MockingRequirement} annotation.
+     */
+    private void registerComponents()
+    {
+        AllComponents allComponentsAnnotation = this.getClass().getAnnotation(AllComponents.class);
+        if (allComponentsAnnotation != null) {
+            this.loader.initialize(this.componentManager, getClass().getClassLoader());
+        } else {
+            ComponentList componentListAnnotation = this.getClass().getAnnotation(ComponentList.class);
+            if (componentListAnnotation != null) {
+                List<ComponentDeclaration> componentDeclarations = new ArrayList<ComponentDeclaration>();
+                for (Class<?> componentClass : componentListAnnotation.value()) {
+                    componentDeclarations.add(new ComponentDeclaration(componentClass.getName()));
+                }
+                this.loader.initialize(this.componentManager, getClass().getClassLoader(), componentDeclarations);
+            }
         }
     }
 
@@ -252,7 +292,7 @@ public abstract class AbstractMockingComponentTestCase extends AbstractMockingTe
      * @return a configured Component Manager
      */
     @Override
-    public EmbeddableComponentManager getComponentManager() throws Exception
+    public MockingComponentManager getComponentManager() throws Exception
     {
         return this.componentManager;
     }

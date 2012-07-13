@@ -19,7 +19,6 @@
  */
 package org.xwiki.job.internal;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
@@ -109,8 +108,6 @@ public abstract class AbstractJobStatus<R extends Request> implements JobStatus
         this.request = request;
         this.observationManager = observationManager;
         this.loggerManager = loggerManager;
-
-        this.progress = new DefaultJobProgress();
     }
 
     /**
@@ -119,6 +116,7 @@ public abstract class AbstractJobStatus<R extends Request> implements JobStatus
     public void startListening()
     {
         // Register progress listener
+        this.progress = new DefaultJobProgress(Thread.currentThread());
         this.observationManager.addListener(this.progress);
 
         // Isolate log for the job status
@@ -161,20 +159,6 @@ public abstract class AbstractJobStatus<R extends Request> implements JobStatus
     public LogQueue getLog()
     {
         return this.logs;
-    }
-
-    @Override
-    public List<LogEvent> getLog(LogLevel level)
-    {
-        List<LogEvent> levelLogs = new ArrayList<LogEvent>();
-
-        for (LogEvent log : this.logs) {
-            if (log.getLevel() == level) {
-                levelLogs.add(log);
-            }
-        }
-
-        return levelLogs;
     }
 
     @Override
@@ -246,5 +230,14 @@ public abstract class AbstractJobStatus<R extends Request> implements JobStatus
     public void setEndDate(Date endDate)
     {
         this.endDate = endDate;
+    }
+
+    // Deprecated
+
+    @Override
+    @Deprecated
+    public List<LogEvent> getLog(LogLevel level)
+    {
+        return this.logs.getLogs(level);
     }
 }

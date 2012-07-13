@@ -27,11 +27,15 @@
   <parent>
     <groupId>org.xwiki.commons</groupId>
     <artifactId>xwiki-commons</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.2-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-commons-pom</artifactId>
   <name>XWiki Commons - Root POM</name>
   <packaging>pom</packaging>
+  <properties>
+    <!-- By default License check is on -->
+    <xwiki.license.skip>false</xwiki.license.skip>
+  </properties>
   <build>
     <defaultGoal>install</defaultGoal>
     <plugins>
@@ -124,6 +128,7 @@
           <groupId>com.mycila.maven-license-plugin</groupId>
           <artifactId>maven-license-plugin</artifactId>
           <configuration>
+            <skip>${xwiki.license.skip}</skip>
             <header>license.txt</header>
             <strictCheck>true</strictCheck>
             <headerDefinitions>
@@ -138,11 +143,12 @@
               <java>SLASHSTAR_STYLE</java>
               <aj>SLASHSTAR_STYLE</aj>
             </mapping>
+            <!-- We're only interested in checking our sources and our POMs -->
+            <includes>
+              <include>src/**</include>
+              <include>pom.xml</include>
+            </includes>
             <excludes>
-              <!-- Exclude Git files -->
-              <exclude>**/.git*</exclude>
-              <!-- Exclude M2Eclipse target folder -->
-              <exclude>target-eclipse/**</exclude>
               <!-- At the moment we don't have a comment syntax for components.txt files so we need to exclude them
                    from the check -->
               <exclude>**/components.txt</exclude>

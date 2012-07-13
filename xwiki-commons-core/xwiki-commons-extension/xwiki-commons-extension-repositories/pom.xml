@@ -27,17 +27,14 @@
   <parent>
     <groupId>org.xwiki.commons</groupId>
     <artifactId>xwiki-commons-extension</artifactId>
-    <version>4.1-SNAPSHOT</version>
+    <version>4.2-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-commons-extension-repositories</artifactId>
   <name>XWiki Commons - Extension - Repository - Parent POM</name>
   <packaging>pom</packaging>
   <description>XWiki Commons - Extension - Repository - Parent POM</description>
-  <properties>
-    <xwiki.checkstyle.skip>true</xwiki.checkstyle.skip>
-  </properties>
   <modules>
-    <module>xwiki-commons-extension-repository-aether</module>
+    <module>xwiki-commons-extension-repository-maven</module>
     <module>xwiki-commons-extension-repository-xwiki</module>
   </modules>
 </project>

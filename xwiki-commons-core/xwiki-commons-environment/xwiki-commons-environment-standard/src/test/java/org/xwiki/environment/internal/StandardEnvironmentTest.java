@@ -120,20 +120,44 @@ public class StandardEnvironmentTest
         Assert.assertEquals(permanentDirectory, this.environment.getPermanentDirectory());
     }
 
+    private void setPersistentDir(final String dirPath)
+    {
+        final Provider<EnvironmentConfiguration> configurationProvider =
+            (Provider<EnvironmentConfiguration>) getMockery().mock(Provider.class);
+        final EnvironmentConfiguration config = getMockery().mock(EnvironmentConfiguration.class);
+        getMockery().checking(new Expectations() {{
+            allowing(configurationProvider).get();
+                will(returnValue(config));
+            allowing(config).getPermanentDirectoryPath();
+                will(returnValue(dirPath));
+        }});
+        ReflectionUtils.setFieldValue(this.environment,
+                                      "configurationProvider",
+                                      configurationProvider);
+    }
+
+    @Test
+    public void testGetConfiguredPermanentDirectory()
+    {
+        final File persistentDir =
+            new File(System.getProperty("java.io.tmpdir"), "xwiki-test-persistentDir");
+        this.setPersistentDir(persistentDir.getAbsolutePath());
+        Assert.assertEquals(persistentDir, this.environment.getPermanentDirectory());
+    }
+
     @Test
     public void testGetPermanentDirectoryWhenNotSet()
     {
         // Also verify that we log a warning!
         final Logger logger = getMockery().mock(Logger.class);
         getMockery().checking(new Expectations() {{
-            oneOf(logger).warn("No permanent directory configured. Using a temporary directory [{}]",
-                               System.getProperty("java.io.tmpdir"));
+        oneOf(logger).warn("No permanent directory configured. Using temporary directory [{}].",
+            System.getProperty("java.io.tmpdir"));
         }});
 
         ReflectionUtils.setFieldValue(this.environment, "logger", logger);
 
-        Assert.assertEquals(new File(System.getProperty("java.io.tmpdir")),
-                            this.environment.getPermanentDirectory());
+        Assert.assertEquals(new File(System.getProperty("java.io.tmpdir")), this.environment.getPermanentDirectory());
     }
 
     @Test
@@ -179,24 +203,19 @@ public class StandardEnvironmentTest
         final Provider<EnvironmentConfiguration> prov = new Provider<EnvironmentConfiguration>() {
             public EnvironmentConfiguration get()
             {
-                return new EnvironmentConfiguration() {
-                    public String getPermanentDirectoryPath()
-                    {
-                        return txtFile.getAbsolutePath();
-                    }
-                };
+            return new EnvironmentConfiguration() {
+                public String getPermanentDirectoryPath()
+                {
+                    return txtFile.getAbsolutePath();
+                }
+            };
             }
         };
         ReflectionUtils.setFieldValue(this.environment, "configurationProvider", prov);
 
-
         final Logger logger = getMockery().mock(Logger.class);
         getMockery().checking(new Expectations() {{
             allowing(logger).error(with(any(String.class)), with(any(String[].class)));
-            // Getting the tmp dir causes the permenant dir to be checked.
-            oneOf(logger).warn("Falling back on [{}] for {} directory.",
-                               System.getProperty("java.io.tmpdir"),
-                               "permanent");
         }});
         ReflectionUtils.setFieldValue(this.environment, "logger", logger);
 

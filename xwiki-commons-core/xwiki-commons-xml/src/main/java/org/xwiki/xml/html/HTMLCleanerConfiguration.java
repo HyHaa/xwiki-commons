@@ -39,6 +39,11 @@ public interface HTMLCleanerConfiguration
     String NAMESPACES_AWARE = "namespacesAware";
 
     /**
+     * Cleaning in restricted mode ({@code &lt;script&gt;} and {@code &lt;style&gt;} should not be allowed for example).
+     */
+    String RESTRICTED = "restricted";
+
+    /**
      * @return the ordered list of filters to use for cleaning the HTML content
      */
     List<HTMLFilter> getFilters();

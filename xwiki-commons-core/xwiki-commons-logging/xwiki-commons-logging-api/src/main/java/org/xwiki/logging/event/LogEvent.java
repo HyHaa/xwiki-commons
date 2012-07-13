@@ -19,11 +19,14 @@
  */
 package org.xwiki.logging.event;
 
+import java.util.List;
+
 import javax.inject.Singleton;
 
 import org.slf4j.helpers.MessageFormatter;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.logging.LogLevel;
+import org.xwiki.logging.internal.helpers.ExtendedMessageFormatter;
 import org.xwiki.observation.event.Event;
 
 /**
@@ -136,5 +139,19 @@ public class LogEvent implements Event
         }
 
         return this.formattedMessage;
+    }
+
+    /**
+     * @return the log message cut in peaces
+     */
+    public List<String> getMessageElements()
+    {
+        return ExtendedMessageFormatter.parseMessage(getMessage(), getArgumentArray());
+    }
+
+    @Override
+    public String toString()
+    {
+        return getLevel().toString() + ':' + getFormattedMessage();
     }
 }

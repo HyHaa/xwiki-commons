@@ -26,12 +26,13 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -62,6 +63,7 @@ import org.xwiki.extension.ExtensionLicense;
 import org.xwiki.extension.ExtensionLicenseManager;
 import org.xwiki.extension.InvalidExtensionException;
 import org.xwiki.extension.LocalExtension;
+import org.xwiki.extension.repository.internal.installed.DefaultInstalledExtension;
 import org.xwiki.extension.version.internal.DefaultVersionConstraint;
 
 /**
@@ -138,7 +140,7 @@ public class DefaultExtensionSerializer implements ExtensionSerializer
     {
         {
             this.serializerById = new HashMap<String, ExtensionPropertySerializer>();
-            this.serializerByClass = new HashMap<Class< ? >, ExtensionPropertySerializer>();
+            this.serializerByClass = new LinkedHashMap<Class< ? >, ExtensionPropertySerializer>();
 
             StringExtensionPropertySerializer stringSerializer = new StringExtensionPropertySerializer();
             IntegerExtensionPropertySerializer integerSerializer = new IntegerExtensionPropertySerializer();
@@ -158,9 +160,8 @@ public class DefaultExtensionSerializer implements ExtensionSerializer
             this.serializerByClass.put(String.class, stringSerializer);
             this.serializerByClass.put(Integer.class, integerSerializer);
             this.serializerByClass.put(Boolean.class, booleanSerializer);
-            this.serializerByClass.put(ArrayList.class, collectionSerializer);
-            this.serializerByClass.put(LinkedList.class, collectionSerializer);
-            this.serializerByClass.put(HashSet.class, setSerializer);
+            this.serializerByClass.put(Set.class, setSerializer);
+            this.serializerByClass.put(Collection.class, collectionSerializer);
         }
     }
 
@@ -268,16 +269,9 @@ public class DefaultExtensionSerializer implements ExtensionSerializer
         }
 
         // Features
-        Node featuresNode = getNode(extensionElement, ELEMENT_FEATURES);
-        if (featuresNode != null) {
-            NodeList features = featuresNode.getChildNodes();
-            for (int i = 0; i < features.getLength(); ++i) {
-                Node featureNode = features.item(i);
-
-                if (featureNode.getNodeName() == ELEMENT_FFEATURE) {
-                    localExtension.addFeature(featureNode.getTextContent().trim());
-                }
-            }
+        List<String> features = parseList(extensionElement, ELEMENT_FEATURES, ELEMENT_FFEATURE);
+        if (features != null) {
+            localExtension.setFeatures(features);
         }
 
         // Dependencies
@@ -313,20 +307,35 @@ public class DefaultExtensionSerializer implements ExtensionSerializer
         }
 
         // Deprecated Namespaces
-        Node namespacesNode = getNode(extensionElement, ELEMENT_NAMESPACES);
-        if (namespacesNode != null) {
-            NodeList namespaceNodeList = namespacesNode.getChildNodes();
-            Collection<String> namespaces = new HashSet<String>();
-            for (int i = 0; i < namespaceNodeList.getLength(); ++i) {
-                Node namespaceNode = namespaceNodeList.item(i);
-
-                namespaces.add(namespaceNode.getTextContent());
-            }
-
+        List<String> namespaces = parseList(extensionElement, ELEMENT_NAMESPACES, ELEMENT_NNAMESPACE);
+        if (namespaces != null) {
             localExtension.putProperty(DefaultInstalledExtension.PKEY_NAMESPACES, namespaces);
         }
 
         return localExtension;
+    }
+
+    private List<String> parseList(Element extensionElement, String rootElement, String childElement)
+    {
+        List<String> list;
+
+        Node featuresNode = getNode(extensionElement, rootElement);
+        if (featuresNode != null) {
+            list = new LinkedList<String>();
+
+            NodeList features = featuresNode.getChildNodes();
+            for (int i = 0; i < features.getLength(); ++i) {
+                Node featureNode = features.item(i);
+
+                if (featureNode.getNodeName() == childElement) {
+                    list.add(featureNode.getTextContent());
+                }
+            }
+        } else {
+            list = null;
+        }
+
+        return list;
     }
 
     private Map<String, Object> parseProperties(Element parentElement)
